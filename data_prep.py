@@ -24,7 +24,7 @@ with st.echo():
 
 st.markdown("## Features")
 with st.echo():
-    # GET NA DATA PER COLUMN
+    # GET DATA PER COLUMN
     na_percent = []
     na_total = []
     minimum = []
@@ -51,12 +51,17 @@ with st.echo():
     
 st.markdown("## Target Column")
 st.markdown('_what is the target column supposed to be?_')
+st.markdown('Lets assume the current definition: __daily GNI per person < 1.9__ ')
 with st.echo():
     # calculate GNI per day (PPP)
     base['target'] = base['NY_GNP_PCAP_PP_CD'] / 365
-    poor = base[base.target < 2][['LOCATION', 'TIME', 'target']]
+    # check for 1.9 threshold
+    poor = base[base.target < 1.9][['LOCATION', 'TIME', 'target']]
+    # tada
+    perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
 
-st.write('Poor countries EVER in %', poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100)
+st.write(poor)
+st.write('From 1970-2018, all countries considered, only ', perc_poor_countries_ever, '% lived in extreme poverty?')
 st.write('this cant be right...')
 
 
