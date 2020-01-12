@@ -53,7 +53,7 @@ with st.echo():
     
 st.markdown("## Target Column")
 st.markdown('_what is the target column supposed to be?_')
-st.markdown('Lets assume the current definition: __daily GNI per person < 1.9__ ')
+st.markdown('Lets assume the current definition: __daily GNI per person < 1.9__.  _(which is a generous approach, since the threshold has risen throughout the years)_ ')
 with st.echo():
     # calculate GNI per day (PPP)
     base['target'] = base['NY_GNP_PCAP_PP_CD'] / 365
