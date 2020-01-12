@@ -21,6 +21,7 @@ with st.echo():
     # DROP DUPLICATES
     base = base.drop_duplicates()
     st.write(base.head(100))
+    st.write(base.shape)
 
 st.markdown("## Features")
 with st.echo():
@@ -48,6 +49,7 @@ with st.echo():
         'maximum': maximum},
         index=base.columns) 
     st.write(features)
+    st.write(features.shape)
     
 st.markdown("## Target Column")
 st.markdown('_what is the target column supposed to be?_')
@@ -61,6 +63,7 @@ with st.echo():
     perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
 
 st.write(poor)
+st.write(poor.shape)
 st.write('From 1970-2018, all countries considered, only ', perc_poor_countries_ever, '% lived in extreme poverty?')
 st.write('this cant be right...')
 
