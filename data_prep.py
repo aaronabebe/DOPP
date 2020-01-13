@@ -23,6 +23,70 @@ with st.echo():
     st.write(base.head(100))
     st.write(base.shape)
 
+    
+st.markdown("## Target Column")
+st.markdown('_what is the target column supposed to be?_')
+st.markdown('Lets assume the current definition: __daily GNI per person < 1.9__  _(which is a generous approach, since the threshold has risen throughout the years)_ - more on that later')
+st.markdown('Still there are 3 different metrics to count the GNI of a state: __LCU, Atlas, PPP__, so which is the correct one?')
+
+st.markdown('### Calculate Poverty Line by PPP')
+with st.echo():
+    # calculate GNI per day (PPP)
+    base['target'] = base['NY_GNP_PCAP_PP_CD'] / 365
+    # check for 1.9 threshold
+    poor = base[base.target < 1.9][['LOCATION', 'TIME', 'target']]
+    # tada
+    perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
+
+st.write(poor)
+st.write(poor.shape)
+st.write('From 1970-2019, all countries considered, only ', perc_poor_countries_ever, '% lived in extreme poverty.')
+st.write('this can\'t be right ...')
+
+st.markdown('### Calculate Poverty Line by Atlas')
+base['target'] = base['NY_GNP_PCAP_CD'] / 365
+poor = base[base.target < 1.9][['LOCATION', 'TIME', 'target']]
+perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
+st.write(poor)
+st.write(poor.shape)
+st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% lived in extreme poverty.')
+
+st.markdown('### Calculate Poverty Line by LCU')
+base['target'] = base['NY_GNP_PCAP_CN'] / 365
+poor = base[base.target < 1.9][['LOCATION', 'TIME', 'target']]
+perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
+st.write(poor)
+st.write(poor.shape)
+st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% lived in extreme poverty.')
+
+# DROP TARGET COLUMN AGAIN
+base = base.drop(['target'], axis=1)
+
+st.markdown('### Calculate Poverty Line by Combination of LCU, PPP and Atlas')
+st.markdown('Appearantly the the poverty threshold startet as 1$/day in 1996 (measure unknown)')
+st.markdown('then moved on to 1.25$/day in 2005 (measure unknown, presumably Atlas)')
+st.markdown('finally it went to 1.9$/day in 2015 (PPP)')
+st.markdown('_the $ values being average per capita income of a person per day_')
+st.markdown("[World Bank Press Release, October 2015]('https://www.worldbank.org/en/news/press-release/2015/10/04/world-bank-forecasts-global-poverty-to-fall-below-10-for-first-time-major-hurdles-remain-in-goal-to-end-poverty-by-2030')")
+with st.echo():
+    # SEPARATE INTO 3 SUB-TABLES: 1970-2004, 2005-2014, 2015-2019
+    sub_0 = base[base['TIME'] < 2005]
+    sub_1 = base[(base['TIME'] >= 2005) & (base['TIME'] < 2015)]
+    sub_2 = base[base['TIME'] >= 2015]
+
+    # WRITE TARGET VARIABLES
+    sub_0['poverty'] = base['NY_GNP_PCAP_CN'].apply(lambda x: (x / 365) < 1)
+    sub_1['poverty'] = base['NY_GNP_PCAP_CD'].apply(lambda x: (x / 365) < 1.25)
+    sub_2['poverty'] = base['NY_GNP_PCAP_PP_CD'].apply(lambda x: (x / 365) < 1.9)
+
+    # RE-CONCAT SUB-DATAFRAMES
+    base = pd.concat([sub_0, sub_1, sub_2])
+
+
+st.markdown("## Final Data Set")
+st.write(base)
+st.write(base.shape)
+
 st.markdown("## Features")
 with st.echo():
     # GET DATA PER COLUMN
@@ -40,6 +104,7 @@ with st.echo():
     descriptions = raw['Indicator'].drop_duplicates().tolist()
     descriptions.insert(0, 'LOCATION')
     descriptions.insert(1, 'TIME')
+    descriptions.insert(38, 'poverty')
 
     features = pd.DataFrame(
         {'descriptions': descriptions, 
@@ -50,26 +115,9 @@ with st.echo():
         index=base.columns) 
     st.write(features)
     st.write(features.shape)
-    
-st.markdown("## Target Column")
-st.markdown('_what is the target column supposed to be?_')
-st.markdown('Lets assume the current definition: __daily GNI per person < 1.9__.  _(which is a generous approach, since the threshold has risen throughout the years)_ ')
-with st.echo():
-    # calculate GNI per day (PPP)
-    base['target'] = base['NY_GNP_PCAP_PP_CD'] / 365
-    # check for 1.9 threshold
-    poor = base[base.target < 1.9][['LOCATION', 'TIME', 'target']]
-    # tada
-    perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
-
-st.write(poor)
-st.write(poor.shape)
-st.write('From 1970-2018, all countries considered, only ', perc_poor_countries_ever, '% lived in extreme poverty?')
-st.write('this cant be right...')
-
 
 # EXPORT BASE DATAFRAME
-base.drop(['target'], axis=1).to_csv('transformed.csv', sep=',', na_rep="NA")
+base.to_csv('transformed.csv', sep=',', na_rep="NA")
 # EXPORT FEATURE DESCRIPTORS
 features.to_csv('feature_descriptions.csv', sep=',', na_rep="NA")
 
