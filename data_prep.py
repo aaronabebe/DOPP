@@ -40,7 +40,7 @@ with st.echo():
 
 st.write(poor)
 st.write(poor.shape)
-st.write('From 1970-2019, all countries considered, only ', perc_poor_countries_ever, '% lived in extreme poverty.')
+st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
 st.write('this can\'t be right ...')
 
 st.markdown('### Calculate Poverty Line by Atlas')
@@ -49,7 +49,7 @@ poor = base[base.target < 1.9][['LOCATION', 'TIME', 'target']]
 perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
 st.write(poor)
 st.write(poor.shape)
-st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% lived in extreme poverty.')
+st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
 
 st.markdown('### Calculate Poverty Line by LCU')
 base['target'] = base['NY_GNP_PCAP_CN'] / 365
@@ -57,7 +57,7 @@ poor = base[base.target < 1.9][['LOCATION', 'TIME', 'target']]
 perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
 st.write(poor)
 st.write(poor.shape)
-st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% lived in extreme poverty.')
+st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
 
 # DROP TARGET COLUMN AGAIN
 base = base.drop(['target'], axis=1)
@@ -87,7 +87,7 @@ with st.echo():
     perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
     st.write(poor)
     st.write(poor.shape)
-    st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% lived in extreme poverty.')
+    st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
 
 
 st.markdown("## Final Data Set")
