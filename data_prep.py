@@ -82,6 +82,13 @@ with st.echo():
     # RE-CONCAT SUB-DATAFRAMES
     base = pd.concat([sub_0, sub_1, sub_2])
 
+    # SHOW HOW MANY COUNTRIES WERE POOR AT LEAST ONCE
+    poor = base[base['poverty'] == True]
+    perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
+    st.write(poor)
+    st.write(poor.shape)
+    st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% lived in extreme poverty.')
+
 
 st.markdown("## Final Data Set")
 st.write(base)
@@ -115,6 +122,7 @@ with st.echo():
         index=base.columns) 
     st.write(features)
     st.write(features.shape)
+
 
 # EXPORT BASE DATAFRAME
 base.to_csv('transformed.csv', sep=',', na_rep="NA")
