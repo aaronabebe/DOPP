@@ -18,4 +18,4 @@ st.write(poor.shape)
 
 st.markdown("## Target Column")
 
-st.balloons()
+
