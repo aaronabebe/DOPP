@@ -25,4 +25,4 @@ with st.echo():
     st.write(dataset.head(100))
 
 
-#st.balloons()
+st.balloons()
