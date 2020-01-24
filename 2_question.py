@@ -11,8 +11,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import KFold
 import category_encoders as ec
 from sklearn import preprocessing
-
-
+from sklearn.preprocessing import StandardScaler
 
 st.markdown("# DOPP3")
 st.markdown('## Which characteristics are predictive for countries with large populations living in extreme poverty?')
@@ -35,7 +34,6 @@ with st.echo():
     #st.write(cols)
 
     dataset = raw[cols]
-
 
 st.write(dataset.head(100))  
     
@@ -106,19 +104,29 @@ st.write(dataset_full.head(100))
 st.markdown('## ML Models')
 
 with st.echo():
+    # GROUND TRUTH AS NUMERIC
     y = dataset_full['poverty']
     y = y.apply(lambda x: 1 if x==True else 0)
     #st.write(y.head(100))
 
+    # FEATURE MATRIX UNSCALED AND SCALED 
     X = dataset_full.drop(labels=['poverty'], axis=1)
+
+    sc = StandardScaler()
+    X_s = sc.fit_transform(X.drop(labels=['LOCATION'], axis=1))
+    X_s = pd.DataFrame(X_s, columns=cols[1:12])
+
+    #ATTRIBUTE 'LOCATION' - BINARY ENCODER 
     encoder = ec.BinaryEncoder(cols=['LOCATION'])
     L_enc = encoder.fit_transform(X['LOCATION'])
     X = pd.concat([X.drop(labels=['LOCATION'], axis=1),L_enc], axis=1)
+    X_s = pd.concat([X_s,L_enc], axis=1)
     
-    #st.write(X.head(100))
+    #st.write(X_s.head(100))
 
     skf = KFold(n_splits=10, random_state = 30)
 
+    # FUNCTIONS FOR ML 
     def print_performance (classifier, X, y, scores= ['accuracy', 'precision', 'recall'], model=''):
         for score in scores:
             #cv1 = cross_val_score(classifier, X, y, cv=skf.split(X,y), scoring=score).mean()
@@ -133,26 +141,30 @@ with st.echo():
         reg.fit(X,y)
         return reg   
 
-    # pogledaj prije koristenja
-    def knn (X, y, n_neighbors=5, weights='uniform', algorithm='auto', leaf_size=30, p=2, metric='minkowski', metric_params=None, n_jobs=None) :
-        reg = neighbors.KNeighborsRegressor(n_neighbors=n_neighbors, weights=weights, algorithm=algorithm, leaf_size=leaf_size, p=p, metric=metric, metric_params=metric_params, n_jobs=n_jobs)
-        print_performance(reg, X , y, model='KNN', scores=["r2" ,"explained_variance", "neg_mean_squared_error", "neg_mean_absolute_error"])
-        reg.fit(X,y)
-        return reg 
-
     def find_best_parameters (classifier, parameters, X, y):
         clf = GridSearchCV(classifier, parameters, cv=10)
         clf.fit(X, y)
         return clf.best_params_
 
-ridge = r_classifier(X,y)
-parameters= {'alpha':list(np.arange(0.1, 10.0, 0.1)), 'solver':['auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg', 'sag', 'saga']}
-find_best_parameters(ridge, parameters, X, y)
+st.markdown('### L2 normalized data')
+ridge = r_classifier(X,y, alpha=0.1)
+st.markdown('### z-scored data')
+ridge_s = r_classifier(X,y, alpha=0.1, normalize=False)
 
-R_coef = ridge.coef_
+## parameters= {'alpha':list(np.arange(0.1, 10.0, 0.1)), 'solver':['auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg', 'sag', 'saga']}
+## bp = find_best_parameters(ridge, parameters, X, y)
+## st.write(bp)
+##  ===> alpha=0.1 solver='auto'
+
+R_coef = np.array(ridge.coef_)
+#st.write(R_coef)
 X_cols = X.columns
+R_relativ = R_coef/R_coef.sum()
+#st.write(R_relativ.sum())
 
+st.markdown('### According to the Ridge Classifier with L2 normalized data we get the following weights: ')
 for i in range(0,len(X_cols)):
-    st.write(str(X_cols[i]) + ' : ' + str(round(R_coef[0,i],6)))
+    st.write(str(X_cols[i]) + ' : ' + str(round(R_coef[0,i],6)) + ', relativ: ' +str(round(R_relativ[0,i],6)))
 
+st.write('From the Ridge regression weights, we can conclude the following: apart from the **location** and **time**, which have the biggest impact on the variable poverty, the important attributes are **fertility rate**, **Population growth** and ** Mortality rate, infant**. Population attributes like *total population*, *population aged 65 years or older*, ... have **no impact** on the poverty variable. ')
 st.balloons()
