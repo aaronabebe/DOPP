@@ -12,7 +12,7 @@ from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.preprocessing import MinMaxScaler
 import streamlit as st
 
-@st.cache
+#@st.cache
 #np.random.seed(9103)
 
 def just_demographic(df_poor):
@@ -63,8 +63,8 @@ def interpolation_df_poor(df_poor):
 def e_poor_selectKBest(df_e_poor, score_f = f_classif):
     e_poor = df_e_poor
     # Split dataset to train
-    X = e_poor.iloc[:,2:-1] # All the columns less the last one
-    y = e_poor.iloc[:,-1] # Just the last column
+    X = e_poor.iloc[:,2:-2] # All the columns less the last one
+    y = e_poor.iloc[:,-2:-1] # Just the last column
     dfcolumns = pd.DataFrame(X.columns)
 
     scaler = MinMaxScaler()
@@ -87,8 +87,8 @@ def e_poor_selectKBest(df_e_poor, score_f = f_classif):
 def e_poor_feature_importance(df_e_poor):
     e_poor = df_e_poor
     # Split dataset to train
-    X = e_poor.iloc[:,2:-1] # All the columns less the last one
-    y = e_poor.iloc[:,-1] # Just the last column
+    X = e_poor.iloc[:,2:-2] # All the columns less the last one
+    y = e_poor.iloc[:,-2:-1] # Just the last column
     model = ExtraTreesClassifier()
     model.fit(X,y)
     print(model.feature_importances_)
@@ -98,7 +98,8 @@ def e_poor_feature_importance(df_e_poor):
     return("All fertig pa pitura")
 
 def plot_correlation_matrix(df_e_poor, n=20):
-    data = e_poor.iloc[:,2:-1] # All columns
+    data = e_poor.iloc[:,2:-2] # All features
+    #data['poverty'] = data['poverty'].apply(lambda x: 1 if x==True else 0)
     # Split dataset to train
     #X = e_poor.iloc[:,2:] # All the columns less the last one
     #y = e_poor.iloc[:,-1] # Just the last column
@@ -113,10 +114,12 @@ def plot_correlation_matrix(df_e_poor, n=20):
     st.write(data[columns].values)
 
     correlation_map = np.corrcoef(data[columns].values.T)
-    sns.set(font_scale=1.5, rc={'figure.figsize':(13,13)})
+    sns.set(font_scale=1, rc={'figure.figsize':(30,30)})
     heatmap = sns.heatmap(correlation_map, cbar=True, annot=False, 
                             square=True, fmt='.2f', yticklabels=columns.values, 
                             xticklabels=columns.values)
+    heatmap.set_xticklabels(heatmap.get_xticklabels(), rotation = 90, fontsize = 16)
+    heatmap.set_yticklabels(heatmap.get_yticklabels(), rotation = 0, fontsize = 16)
     st.pyplot()
     return("All fertig pa pitura")
 
@@ -160,7 +163,13 @@ with st.echo():
     e_countries = set(c_no_poor).intersection(c_poor) # Identifying emerging countries
     #print (e_countries)
     #e_countries # Emerging
+    poor['emerging'] = poor['LOCATION'].isin(e_countries)
     e_poor = poor[poor['LOCATION'].isin(e_countries)]
+    st.write(poor)
+    st.write(e_poor)
+
+    #poor['emerging'] = poor['LOCATION'].apply(lambda x: (x.isin(e_countries)))
+    #sub_0['poverty'] = base['NY_GNP_PCAP_CN'].apply(lambda x: (x / 365) < 1)
     #print(len(e_countries))
     #print(set(e_countries))
     #e_poor = just_demographic(e_poor)
@@ -191,8 +200,8 @@ with st.echo():
     st.write(e_poor_selectKBest(e_poor,score_f=mutual_info_classif))
     st.write("feature_importance")
     e_poor_feature_importance(e_poor)
-    #st.write("Correlation Matrix")
-    #plot_correlation_matrix(e_poor)
+    st.write("Correlation Matrix")
+    plot_correlation_matrix(e_poor)
     
 st.write(alles_good_papi())
 st.balloons()
