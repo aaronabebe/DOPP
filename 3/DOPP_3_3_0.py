@@ -5,7 +5,7 @@ import sklearn as sk
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 from sklearn.feature_selection import f_classif
-
+from sklearn.ensemble import ExtraTreesClassifier
 import streamlit as st
 
 
@@ -49,8 +49,6 @@ def interpolation_df_poor(df_poor):
                                     axis = 0)
         
         df_poor[df_poor['LOCATION']==c] = df_c
-
-
         #st.write(df_poor[df_poor['LOCATION']==c])
         #break
     return(df_poor)
@@ -111,30 +109,30 @@ st.write(e_poor)
 #    #e_poor.interpolation(method="Linear")
 #    print("Not implemented yet")
 
-
-st.markdown("## Building a Model")
-st.markdown("[Feature Selection Techniques in Machine Learning with Python] ('https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e')")
-with st.echo():
+def e_poor_selectKBest(df_e_poor, score_f = f_classif):
+    e_poor = df_e_poor
     # Split dataset to train
     X = e_poor.iloc[:,2:-1] # All the columns less the last one
     y = e_poor.iloc[:,-1] # Just the last column
     # Create the feature selector
-    bestFeatures = SelectKBest(score_func=f_classif, k=5)
-    st.write(X)
-    
+    #perhaps a switch
+    bestFeatures = SelectKBest(score_func=score_f, k='all')
+    #st.write(X)
     fit = bestFeatures.fit(X,y)
-
     dfscores = pd.DataFrame(fit.scores_)
     dfcolumns = pd.DataFrame(X.columns)
     # Create a data frame to see the impact of the features
     featureScores = pd.concat([dfcolumns,dfscores],axis=1)
     featureScores.columns = ['Features','Scores']
-    st.write(featureScores)
+    featureScores.sort_values(by='Scores', ascending=False, inplace=True)
+    return(featureScores)
 
 
 
-
-
+st.markdown("## Building a Model")
+st.markdown("[Feature Selection Techniques in Machine Learning with Python] ('https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e')")
+with st.echo():
+    st.write(e_poor_selectKBest(e_poor))
 
 st.write(alles_good_papi())
 st.balloons()
