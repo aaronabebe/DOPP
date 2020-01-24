@@ -1,13 +1,19 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy
+import seaborn as sns
 import sklearn as sk
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 from sklearn.feature_selection import f_classif
+from sklearn.feature_selection import mutual_info_classif
 from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.preprocessing import MinMaxScaler
 import streamlit as st
 
+@st.cache
+#np.random.seed(9103)
 
 def just_demographic(df_poor):
     feature_descriptions = pd.read_csv("data/feature_descriptions.csv")
@@ -49,9 +55,72 @@ def interpolation_df_poor(df_poor):
                                     axis = 0)
         
         df_poor[df_poor['LOCATION']==c] = df_c
+
         #st.write(df_poor[df_poor['LOCATION']==c])
         #break
     return(df_poor)
+
+def e_poor_selectKBest(df_e_poor, score_f = f_classif):
+    e_poor = df_e_poor
+    # Split dataset to train
+    X = e_poor.iloc[:,2:-1] # All the columns less the last one
+    y = e_poor.iloc[:,-1] # Just the last column
+    dfcolumns = pd.DataFrame(X.columns)
+
+    scaler = MinMaxScaler()
+    scaler.fit(X)
+    X = scaler.transform(X)
+    # Create the feature selector
+    #perhaps a switch
+    bestFeatures = SelectKBest(score_func=score_f, k='all')
+    #st.write(X)
+    fit = bestFeatures.fit(X,y)
+    dfscores = pd.DataFrame(fit.scores_)
+
+    # Create a data frame to see the impact of the features
+    featureScores = pd.concat([dfcolumns,dfscores],axis=1)
+    featureScores.columns = ['Features','Scores']
+    featureScores.sort_values(by='Scores', ascending=False, inplace=True)
+    
+    return(featureScores)
+
+def e_poor_feature_importance(df_e_poor):
+    e_poor = df_e_poor
+    # Split dataset to train
+    X = e_poor.iloc[:,2:-1] # All the columns less the last one
+    y = e_poor.iloc[:,-1] # Just the last column
+    model = ExtraTreesClassifier()
+    model.fit(X,y)
+    print(model.feature_importances_)
+    feat_importances = pd.Series(model.feature_importances_, index=X.columns)
+    feat_importances.nlargest(20).plot(kind='barh', figsize = (13, 6), fontsize=12)
+    st.pyplot()
+    return("All fertig pa pitura")
+
+def plot_correlation_matrix(df_e_poor, n=20):
+    data = e_poor.iloc[:,2:-1] # All columns
+    # Split dataset to train
+    #X = e_poor.iloc[:,2:] # All the columns less the last one
+    #y = e_poor.iloc[:,-1] # Just the last column
+    columns = data.columns
+    plt.clf()
+    correlation = data.corr()
+
+    #columns = correlation.nlargest(n, 'poverty').index
+    st.write('OK')
+    #st.write(columnss)
+    st.write(columns)
+    st.write(data[columns].values)
+
+    correlation_map = np.corrcoef(data[columns].values.T)
+    sns.set(font_scale=1.5, rc={'figure.figsize':(13,13)})
+    heatmap = sns.heatmap(correlation_map, cbar=True, annot=False, 
+                            square=True, fmt='.2f', yticklabels=columns.values, 
+                            xticklabels=columns.values)
+    st.pyplot()
+    return("All fertig pa pitura")
+
+
 
 ##
 
@@ -109,30 +178,21 @@ st.write(e_poor)
 #    #e_poor.interpolation(method="Linear")
 #    print("Not implemented yet")
 
-def e_poor_selectKBest(df_e_poor, score_f = f_classif):
-    e_poor = df_e_poor
-    # Split dataset to train
-    X = e_poor.iloc[:,2:-1] # All the columns less the last one
-    y = e_poor.iloc[:,-1] # Just the last column
-    # Create the feature selector
-    #perhaps a switch
-    bestFeatures = SelectKBest(score_func=score_f, k='all')
-    #st.write(X)
-    fit = bestFeatures.fit(X,y)
-    dfscores = pd.DataFrame(fit.scores_)
-    dfcolumns = pd.DataFrame(X.columns)
-    # Create a data frame to see the impact of the features
-    featureScores = pd.concat([dfcolumns,dfscores],axis=1)
-    featureScores.columns = ['Features','Scores']
-    featureScores.sort_values(by='Scores', ascending=False, inplace=True)
-    return(featureScores)
-
-
 
 st.markdown("## Building a Model")
 st.markdown("[Feature Selection Techniques in Machine Learning with Python] ('https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e')")
 with st.echo():
+    st.write("Best ")
+    st.write("f_classif")
     st.write(e_poor_selectKBest(e_poor))
-
+    st.write("chi2")
+    st.write(e_poor_selectKBest(e_poor,score_f=chi2))
+    st.write("mutual_info_classif")
+    st.write(e_poor_selectKBest(e_poor,score_f=mutual_info_classif))
+    st.write("feature_importance")
+    e_poor_feature_importance(e_poor)
+    #st.write("Correlation Matrix")
+    #plot_correlation_matrix(e_poor)
+    
 st.write(alles_good_papi())
 st.balloons()
