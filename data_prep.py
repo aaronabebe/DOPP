@@ -1,5 +1,7 @@
 import pandas as pd 
 import streamlit as st
+import plots as plot
+
 
 st.markdown("# Data Preparation - DOPP3")
 st.markdown('_creating a data set to predict extreme poverty_')
@@ -17,11 +19,20 @@ with st.echo():
         loop = raw.loc[raw.DEMO_IND == keys[i]]
         base = pd.merge(base, loop[['LOCATION', 'TIME', 'Value']],  how='left', left_on=['LOCATION','TIME'], right_on = ['LOCATION','TIME']) 
         base.columns = base.columns.str.replace('Value', keys[i])
+    
+    # ADD CONTINENTS FOR PLOTTING
+    continents = pd.read_csv('continents.csv', index_col=1)
+    base = pd.merge(base, continents, left_on=base['LOCATION'], right_index=True)
+    base.drop(['key_0'], axis=1,inplace=True)
 
     # DROP DUPLICATES
     base = base.drop_duplicates()
+    base = base[~base.index.duplicated()]
     st.write(base.head(100))
     st.write(base.shape)
+
+#year = st.slider("Poverty GPI for year: ", 1971, 2006)
+#get_plot(base, year)
 
     
 st.markdown("## Target Column")
@@ -40,8 +51,13 @@ with st.echo():
 
 st.write(poor)
 st.write(poor.shape)
+
 st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
+plot.ppp_line_chart(base.copy())
 st.write('this can\'t be right ...')
+
+
+
 
 st.markdown('### Calculate Poverty Line by Atlas')
 base['target'] = base['NY_GNP_PCAP_CD'] / 365
@@ -49,7 +65,9 @@ poor = base[base.target < 1.9][['LOCATION', 'TIME', 'target']]
 perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / base['LOCATION'].drop_duplicates().shape[0] * 100,2)
 st.write(poor)
 st.write(poor.shape)
+
 st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
+plot.atlas_line_chart(base.copy())
 
 st.markdown('### Calculate Poverty Line by LCU')
 base['target'] = base['NY_GNP_PCAP_CN'] / 365
@@ -58,6 +76,10 @@ perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / b
 st.write(poor)
 st.write(poor.shape)
 st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
+plot.lcu_line_chart(base.copy())
+
+
+
 
 # DROP TARGET COLUMN AGAIN
 base = base.drop(['target'], axis=1)
@@ -89,10 +111,16 @@ with st.echo():
     st.write(poor.shape)
     st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
 
-
+plot.combined_line_chart(base.copy())
 st.markdown("## Final Data Set")
 st.write(base)
 st.write(base.shape)
+
+plot.scatter_poor_rich(base.copy())
+
+plot.scatter(base.copy(), x='SP_DYN_TFRT_IN', x_name='Fertility Rate', y='NY_GDP_PCAP_CD', y_name='GDP per capita')
+
+plot.world_map(base.copy(), y='SP_DYN_TFRT_IN', y_name='Fertility Rate')
 
 st.markdown("## Features")
 with st.echo():
@@ -128,6 +156,3 @@ with st.echo():
 base.to_csv('transformed.csv', sep=',', na_rep="NA")
 # EXPORT FEATURE DESCRIPTORS
 features.to_csv('feature_descriptions.csv', sep=',', na_rep="NA")
-
-# BALLOOOOOOONS
-st.balloons()
