@@ -69,10 +69,12 @@ st.markdown('The dataset contains a lot of missing values. We did **linear inter
 with st.echo():
     by_country = dataset.groupby(by=dataset['LOCATION'])  
     dataset_full = pd.DataFrame(columns=cols)
+    dataset_full2 = pd.DataFrame(columns=cols)
 
 
     for name, group in by_country :
-        tdf = pd.DataFrame(columns=cols) 
+        tdf = pd.DataFrame(columns=cols)
+        tdf2 = pd.DataFrame(columns=cols) 
 
         tdf['TIME'] = group['TIME']
         tdf['poverty'] = group['poverty']
@@ -94,12 +96,20 @@ with st.echo():
         # fill the NaN values that were not interpolated
         tdf.fillna(tdf.mean(), inplace=True)
 
+        # Another way to interpolate - take mean for the cols with all NaNs
+        tdf2 = group.interpolate(method ='linear', limit_direction ='forward', axis = 0)
+        tdf2 = tdf2.interpolate(method ='linear', limit_direction ='backward', axis = 0)
+        tdf2['LOCATION'] = name
+        tdf2.fillna(dataset.drop(labels=['LOCATION'], axis=1).mean(), inplace=True)
+
+        dataset_full2 = pd.concat([dataset_full2,tdf2])
         dataset_full = pd.concat([dataset_full,tdf])
 
+    
+dataset_full2.sort_index(inplace=True)
 dataset_full.sort_index(inplace=True)
-st.write(dataset_full.head(100))
-#st.write(X.shape)
-#st.write(X.isnull().values.any())
+st.write(dataset_full2.head(100))
+
 
 st.markdown('## ML Models')
 
@@ -111,6 +121,9 @@ with st.echo():
 
     # FEATURE MATRIX UNSCALED AND SCALED 
     X = dataset_full.drop(labels=['poverty'], axis=1)
+    X_2 = dataset_full2.drop(labels=['LOCATION', 'poverty'], axis=1)
+    X_noloc =  dataset_full.drop(labels=['poverty'], axis=1).drop(labels=['LOCATION'], axis=1)
+    st.write(X_2)
 
     sc = StandardScaler()
     X_s = sc.fit_transform(X.drop(labels=['LOCATION'], axis=1))
@@ -150,6 +163,10 @@ st.markdown('### L2 normalized data')
 ridge = r_classifier(X,y, alpha=0.1)
 st.markdown('### z-scored data')
 ridge_s = r_classifier(X,y, alpha=0.1, normalize=False)
+st.markdown('### L2 normalized data no location')
+ridge_noloc =  r_classifier(X_noloc,y, alpha=0.1)
+st.markdown('### L2 normalized data no location and mean')
+ridge_2=  r_classifier(X_2,y, alpha=0.1)
 
 ## parameters= {'alpha':list(np.arange(0.1, 10.0, 0.1)), 'solver':['auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg', 'sag', 'saga']}
 ## bp = find_best_parameters(ridge, parameters, X, y)
@@ -167,4 +184,28 @@ for i in range(0,len(X_cols)):
     st.write(str(X_cols[i]) + ' : ' + str(round(R_coef[0,i],6)) + ', relativ: ' +str(round(R_relativ[0,i],6)))
 
 st.write('From the Ridge regression weights, we can conclude the following: apart from the **location** and **time**, which have the biggest impact on the variable poverty, the important attributes are **fertility rate**, **Population growth** and ** Mortality rate, infant**. Population attributes like *total population*, *population aged 65 years or older*, ... have **no impact** on the poverty variable. ')
+
+#st.write('### According to the Ridge Classifier with L2 normalized data (no location) we get the following weights:')
+R_coef_noloc = np.array(ridge_noloc.coef_)
+#st.write(R_coef)
+X_noloc_cols = X_noloc.columns
+R_noloc_relativ = R_coef_noloc/np.abs(R_coef_noloc).sum()
+#st.write(R_relativ.sum())
+
+st.markdown('### According to the Ridge Classifier with L2 normalized data (no location) we get the following weights: ')
+for i in range(0,len(X_noloc_cols)):
+    st.write(str(X_noloc_cols[i]) + ' : ' + str(round(R_coef_noloc[0,i],6)) + ', relativ: ' +str(round(R_noloc_relativ[0,i],6)))
+
+
+R2_coef = np.array(ridge_2.coef_)
+#st.write(R_coef)
+X2_cols = X_2.columns
+R2_relativ = R2_coef/np.abs(R2_coef).sum()
+#st.write(R_relativ.sum())
+
+st.markdown('### According to the Ridge Classifier with L2 normalized data (no location, mean) we get the following weights: ')
+for i in range(0,len(X2_cols)):
+    st.write(str(X2_cols[i]) + ' : ' + str(round(R2_coef[0,i],6)) + ', relativ: ' +str(round(R2_relativ[0,i],6)))
+
+
 st.balloons()
