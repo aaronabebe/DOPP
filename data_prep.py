@@ -22,18 +22,17 @@ with st.echo():
     
     # ADD CONTINENTS FOR PLOTTING
     continents = pd.read_csv('continents.csv', index_col=1)
-    base = pd.merge(base, continents, left_on=base['LOCATION'], right_index=True)
-    base.drop(['key_0'], axis=1,inplace=True)
+    st.write(base.shape)
+    base = pd.merge(base, continents, how='inner', left_on='LOCATION', right_index=True)
+    st.write(base.shape)
+    base = base[~base.index.duplicated()]
+    #base.drop(['key_0'], axis=1,inplace=True)
+
 
     # DROP DUPLICATES
-    base = base.drop_duplicates()
-    base = base[~base.index.duplicated()]
-    st.write(base.head(100))
     st.write(base.shape)
-
-#year = st.slider("Poverty GPI for year: ", 1971, 2006)
-#get_plot(base, year)
-
+    base = base.drop_duplicates()
+    st.write(base.head(100))
     
 st.markdown("## Target Column")
 st.markdown('_what is the target column supposed to be?_')
@@ -53,7 +52,7 @@ st.write(poor)
 st.write(poor.shape)
 
 st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
-plot.ppp_line_chart(base.copy())
+st.plotly_chart(plot.line_chart(base.copy(), y='target', y_name='PPP', threshold=1.9))
 st.write('this can\'t be right ...')
 
 
@@ -67,7 +66,7 @@ st.write(poor)
 st.write(poor.shape)
 
 st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
-plot.atlas_line_chart(base.copy())
+st.plotly_chart(plot.line_chart(base.copy(), y='target', y_name='Atlas', threshold=1.5))
 
 st.markdown('### Calculate Poverty Line by LCU')
 base['target'] = base['NY_GNP_PCAP_CN'] / 365
@@ -76,7 +75,8 @@ perc_poor_countries_ever = round(poor['LOCATION'].drop_duplicates().shape[0] / b
 st.write(poor)
 st.write(poor.shape)
 st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
-plot.lcu_line_chart(base.copy())
+st.plotly_chart(plot.line_chart(base.copy(), y='target', y_name='LCU', threshold=1))
+
 
 
 
@@ -111,16 +111,14 @@ with st.echo():
     st.write(poor.shape)
     st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
 
-plot.combined_line_chart(base.copy())
+st.plotly_chart(plot.combined_line_chart(base.copy()))
 st.markdown("## Final Data Set")
 st.write(base)
 st.write(base.shape)
 
-plot.scatter_poor_rich(base.copy())
-
-plot.scatter(base.copy(), x='SP_DYN_TFRT_IN', x_name='Fertility Rate', y='NY_GDP_PCAP_CD', y_name='GDP per capita')
-
-plot.world_map(base.copy(), y='SP_DYN_TFRT_IN', y_name='Fertility Rate')
+st.plotly_chart(plot.scatter_poor_rich(base.copy()))
+st.plotly_chart(plot.scatter(base.copy(), x='SP_DYN_TFRT_IN', x_name='Fertility Rate', y='NY_GDP_PCAP_CD', y_name='GDP per capita'))
+st.plotly_chart(plot.world_map(base.copy(), y='SP_DYN_TFRT_IN', y_name='Fertility Rate'))
 
 st.markdown("## Features")
 with st.echo():
@@ -129,6 +127,9 @@ with st.echo():
     na_total = []
     minimum = []
     maximum = []
+    # REMOVE CONTINENT COL
+    base.drop(['continent'], axis=1,inplace=True)
+
     for col in base.columns:
         na_percent.append(round(base[col].isna().sum() / base.shape[0] * 100, 2))
         na_total.append(base[col].isna().sum())
