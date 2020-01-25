@@ -9,6 +9,22 @@ THRESHOLD_LINE_COLOR = 'red'
 THRESHOLD_LINE_WIDTH = 4
 
 
+
+def question1(base):
+    poverty_percent = {'TIME': [], 'PERCENT': []}
+    for i in range(1970, 2019):
+        poverty_percent['TIME'].append(i)
+        poverty_percent['PERCENT'].append(base[(base['TIME']==i) & (base['poverty'])].shape[0] / base[base['TIME']==i].shape[0])
+
+    pp = pd.DataFrame(poverty_percent)
+
+    fig = px.line(
+        pp, 
+        x='TIME', 
+        y='PERCENT', 
+    )
+    return fig
+
 def line_chart(base, y, y_name, threshold):
     base.rename(columns={y: y_name, '200101': 'Population'}, inplace=True)
     fig = px.line(

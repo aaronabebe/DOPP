@@ -22,9 +22,7 @@ with st.echo():
     
     # ADD CONTINENTS FOR PLOTTING
     continents = pd.read_csv('continents.csv', index_col=1)
-    st.write(base.shape)
     base = pd.merge(base, continents, how='inner', left_on='LOCATION', right_index=True)
-    st.write(base.shape)
     base = base[~base.index.duplicated()]
     #base.drop(['key_0'], axis=1,inplace=True)
 
@@ -77,10 +75,6 @@ st.write(poor.shape)
 st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
 st.plotly_chart(plot.line_chart(base.copy(), y='target', y_name='LCU', threshold=1))
 
-
-
-
-
 # DROP TARGET COLUMN AGAIN
 base = base.drop(['target'], axis=1)
 
@@ -110,6 +104,10 @@ with st.echo():
     st.write(poor)
     st.write(poor.shape)
     st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
+
+
+st.markdown('what percentage of the world population lives in extreme poverty?')
+st.plotly_chart(plot.question1(base))
 
 st.plotly_chart(plot.combined_line_chart(base.copy()))
 st.markdown("## Final Data Set")
