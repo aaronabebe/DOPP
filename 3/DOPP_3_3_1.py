@@ -10,7 +10,14 @@ from sklearn.feature_selection import f_classif
 from sklearn.feature_selection import mutual_info_classif
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.preprocessing import MinMaxScaler
+from sklearn import tree
+from sklearn.tree import _tree
+from sklearn.tree import DecisionTreeClassifier as DTC
+
+#from sklearn.decomposition import PCA
+
 import streamlit as st
+
 
 #@st.cache
 #np.random.seed(9103)
@@ -41,10 +48,41 @@ def interpolation_df_poor(df_poor):
         df_c = df_c.interpolate(method ='linear', 
                                     limit_direction ='backward',
                                     axis = 0)
+        df_c.fillna(poor.drop(labels='LOCATION', axis=1).mean(), inplace =True)
         df_poor[df_poor['LOCATION']==c] = df_c
     return(df_poor)
 
-def e_poor_selectKBest(df_e_poor, score_f = f_classif):
+def thresholds(df_poor):
+    poor = df_poor
+    thresholds = {}
+    columns = poor.columns[2:-2]
+    st.write(columns)
+    X = poor.iloc[:,2:-2]
+    st.write(len(X))
+    #st.write(columns)
+    y = poor.iloc[:,-2:-1]
+    st.write(len(y))
+    #st.write(y)
+    i = 1
+    for c in columns:
+        st.write(c)
+        st.write(X[c])
+        X = np.array(X[c]).reshape(-1, 1)
+        y = y
+        clf_tree = DTC(criterion="gini",
+                        max_depth=1, 
+                        splitter="best")
+        clf_tree.fit(X,y)
+        #thresholds[c] = clf_tree.tree_.threshold[0]
+        threshold = clf_tree.tree_.threshold[0]
+        st.write(threshold)
+        i = i+1
+        #break        
+        #thresholds[c] = 
+    #st.write(thresholds)    
+    #return(thresholds)
+
+def e_poor_selectKBest(df_e_poor, score_f = f_classif, k='all'):
     e_poor = df_e_poor
     # Split dataset to train
     X = e_poor.iloc[:,2:-2] # All the columns less the last one
@@ -56,7 +94,7 @@ def e_poor_selectKBest(df_e_poor, score_f = f_classif):
     X = scaler.transform(X)
     # Create the feature selector
     #perhaps a switch
-    bestFeatures = SelectKBest(score_func=score_f, k='all')
+    bestFeatures = SelectKBest(score_func=score_f, k=k)
     fit = bestFeatures.fit(X,y)
     dfscores = pd.DataFrame(fit.scores_)
 
@@ -79,6 +117,13 @@ def e_poor_feature_importance(df_e_poor):
     feat_importances.nlargest(20).plot(kind='barh', figsize = (13, 6), fontsize=12)
     st.pyplot()
     return("All fertig pa pitura")
+
+def e_poor_PCA(df_e_poor, n=20):
+
+
+
+
+    return (poor)
 
 def plot_correlation_matrix(df_e_poor, n=20):
     data = e_poor.iloc[:,2:-2] # All features
@@ -131,6 +176,7 @@ with st.echo():
     e_poor = poor[poor['LOCATION'].isin(e_countries)]
     st.write(poor)
     st.write(e_poor)
+    thresholds(df_poor=poor)
 
 st.write(len(e_countries))
 st.write(len(poor.LOCATION.unique()))
@@ -150,6 +196,7 @@ with st.echo():
     e_poor_feature_importance(e_poor)
     st.write("Correlation Matrix")
     plot_correlation_matrix(e_poor)
+    
     
 st.write(alles_good_papi())
 st.balloons()
