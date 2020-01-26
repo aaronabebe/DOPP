@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+#CARLOS LIBRARIES
 import scipy
 import seaborn as sns
 import sklearn as sk
@@ -13,6 +14,15 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn import tree
 from sklearn.tree import _tree
 from sklearn.tree import DecisionTreeClassifier as DTC
+#SANJA LIBRARIES
+from sklearn.model_selection import cross_val_score
+from sklearn import linear_model
+from sklearn import neighbors
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import KFold
+import category_encoders as ec
+from sklearn import preprocessing
+from sklearn.preprocessing import StandardScaler
 
 #from sklearn.decomposition import PCA
 
@@ -227,6 +237,21 @@ def years_emerged(e_poor):
 
     return(years)
 
+def linearModel(df_e_poor, alpha=0.1, fit_intercept=True, normalize=True, solver='auto', max_iter=1000, tol=0.0001):
+    e_poor = df_e_poor
+    # Split dataset to train
+    X = e_poor.iloc[:,2:-2] # All the columns less the last one
+    #st.write(X.columns)
+    y = e_poor.iloc[:,-2:-1] # Just the last column
+
+    lm = linear_model.RidgeClassifier(alpha=alpha, fit_intercept=fit_intercept, normalize=normalize, max_iter=max_iter, tol=0.001, solver='auto', random_state=30)
+    lm.fit(X,y)
+    coefficients = pd.concat([pd.DataFrame(X.columns),pd.DataFrame(np.transpose(lm.coef_))], axis = 1)
+    st.write(coefficients)
+    return(lm)
+
+
+
 st.markdown("## Building a Model")
 st.markdown("[Feature Selection Techniques in Machine Learning with Python] ('https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e')")
 with st.echo():
@@ -241,6 +266,13 @@ with st.echo():
     e_poor_feature_importance(e_poor)
     st.write("Correlation Matrix")
     plot_correlation_matrix(e_poor)
+    st.write("Linear Model")
+    lm = linearModel(df_e_poor = e_poor)
+    #st.write(e_poor.columns)
+    #st.write(lm)
+    #st.wrtie(lm.get_params)
+    #st.write(lm.coef_)
+
 
 st.markdown("## Whether the countries emerged")
 with st.echo():
