@@ -75,6 +75,10 @@ st.write(poor.shape)
 st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever, '% have lived in extreme poverty at least once.')
 st.plotly_chart(plot.line_chart(base.copy(), y='target', y_name='LCU', threshold=1))
 
+
+st.plotly_chart(plot.combined_line_chart(base.copy()))
+
+
 # DROP TARGET COLUMN AGAIN
 base = base.drop(['target'], axis=1)
 
@@ -109,7 +113,6 @@ with st.echo():
 st.markdown('what percentage of the world population lives in extreme poverty?')
 st.plotly_chart(plot.question1(base))
 
-st.plotly_chart(plot.combined_line_chart(base.copy()))
 st.markdown("## Final Data Set")
 st.write(base)
 st.write(base.shape)

@@ -9,24 +9,26 @@ THRESHOLD_LINE_COLOR = 'red'
 THRESHOLD_LINE_WIDTH = 4
 
 
-
 def question1(base):
-    poverty_percent = {'TIME': [], 'PERCENT': []}
+    poverty_percent = {'Year': [], '% of population in extreme poverty': []}
     for i in range(1970, 2019):
-        poverty_percent['TIME'].append(i)
-        poverty_percent['PERCENT'].append(base[(base['TIME']==i) & (base['poverty'])].shape[0] / base[base['TIME']==i].shape[0])
+        poverty_percent['Year'].append(i)
+        poverty_percent['% of population in extreme poverty'].append(base[(base['TIME']==i) & (base['poverty'])].shape[0] / base[base['TIME']==i].shape[0])
 
     pp = pd.DataFrame(poverty_percent)
 
     fig = px.line(
         pp, 
-        x='TIME', 
-        y='PERCENT', 
+        x='Year', 
+        y='% of population in extreme poverty', 
     )
     return fig
 
+
 def line_chart(base, y, y_name, threshold):
     base.rename(columns={y: y_name, '200101': 'Population'}, inplace=True)
+    base = merge_continents(base)
+
     fig = px.line(
         base.fillna(0), 
         x='TIME', 
@@ -38,16 +40,23 @@ def line_chart(base, y, y_name, threshold):
     fig.update_layout(yaxis_type="log")
     return fig
 
-def combined_line_chart(base): 
-    base.rename(columns={'NY_GNP_PCAP_CD': 'target', '200101': 'Population'}, inplace=True)
+
+def combined_line_chart(base, y): 
+
+    # COUNT DAILY NOT YEARLY
+    base[y] = base['NY_GNP_PCAP_CD'].apply(lambda x: (x / 365))
+
+    base = merge_continents(base)
 
     fig = px.line(
-        base.fillna(0), 
+        base, 
         x="TIME", 
-        y="target", 
+        y=y, 
         hover_name="LOCATION", 
         color="continent",
     )
+
+    # ADD THRESHOLD LINE
     fig.add_shape(get_threshold_line(1970, 1996, 1))
     fig.add_shape(get_threshold_line(1996, 2005, 1.25))
     fig.add_shape(get_threshold_line(2005, 2019, 1.9))
@@ -69,26 +78,22 @@ def get_threshold_line(start, end, height):
         )
     )
 
-def pie_chart(base):
-    #base['poverty_count'] = base['TIME']
-    fig = px.pie(
-        base, 
-        names='LOCATION', 
-        values='poverty',
-        #animation_frame='TIME'
-        #color_continuous_scale=px.colors.sequential.Viridis, 
-        #render_mode="webgl"
-    )
-    return fig
+def merge_continents(base):
+    # ADD CONTINENTS FOR PLOTTING
+    continents = pd.read_csv('continents.csv')
+    base = pd.merge(base, continents, left_on='LOCATION', right_on='LOCATION')
+    return base
+
 
 def scatter_poor_rich(base):
     base.rename(columns={
         '200151': 'Population aged 65 or older',
         'SP_DYN_LE00_IN': 'Life expectancy at birth', 
         '200101': 'Population'
-    }, 
-    inplace=True)
+    }, inplace=True)
     base['Population'].fillna(1, inplace=True)
+    
+    base = merge_continents(base)
 
     fig = px.scatter(
             base, 
@@ -103,8 +108,15 @@ def scatter_poor_rich(base):
 
 
 def scatter(base, x, x_name, y, y_name):
-    base.rename(columns={x: x_name, y: y_name, '200101': 'Population'}, inplace=True)
+    base.rename(columns={
+        x: x_name, 
+        y: y_name, 
+        '200101': 'Population'}, 
+    inplace=True)
+
     base['Population'].fillna(1, inplace=True)
+
+    base = merge_continents(base)
 
     fig = px.scatter(
         data_frame=base, 
@@ -119,13 +131,15 @@ def scatter(base, x, x_name, y, y_name):
     return fig
 
 
-def world_map(base, y, y_name):
-    #base.rename(columns={y: y_name, '200101': 'Population'}, inplace=True)
-    base[y_name] = base[y].apply(lambda x: (x / 365))
+def world_map(base, y, y_name, yearly_feature=False):
+    if yearly_feature:
+        base[y_name] = base[y].apply(lambda x: (x / 365))
+    else:
+        base.rename(columns={y: y_name}, inplace=True)
     fig = px.choropleth(    
         base,
         locations="LOCATION",
-        color=y,
+        color=y_name,
         hover_name="LOCATION",
         animation_frame="TIME"
     )
