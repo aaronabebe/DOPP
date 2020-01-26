@@ -56,7 +56,7 @@ def thresholds(df_poor):
     poor = df_poor
     thresholds = {}
     columns = poor.columns[2:-2]
-    st.write(columns)
+    #st.write(columns)
     X = poor.iloc[:,2:-2]
     #st.write(len(X))
     #st.write(columns)
@@ -102,21 +102,16 @@ def e_poor_selectKBest(df_e_poor, score_f = f_classif, k='all'):
     featureScores.sort_values(by='Scores', ascending=False, inplace=True)
     scores = featureScores.Scores
     rel_scores = np.array(scores)/np.abs(np.array(scores)).sum()
-    #rel_scores.reshape(-1, 1)
+    rel_scores.reshape(-1, 1)
     #st.write(rel_scores.shape)
 
-    #rel_scores.names = ['Relative']
-    #df = pd.DataFrame(rel_scores, columns=list('Relative'))
-    #st.write(df)
-    #featureScores = pd.concat([featureScores, df], axis=1)
+    rel_scores = pd.DataFrame(rel_scores, dtype=float, columns=['Relative'])
 
-    #pd.concat([scores,rel_scores], axis=1)
-
-    #parameters = fit.
-    st.write(scores)
-    st.write(rel_scores)
-    
-    return(featureScores)
+    df_scores = pd.concat([featureScores,rel_scores], axis=1)
+    #st.write(df_scores)
+    #st.write(scores)
+    #st.write(rel_scores)
+    return(df_scores)
 
 def e_poor_feature_importance(df_e_poor):
     e_poor = df_e_poor
@@ -141,7 +136,7 @@ def plot_correlation_matrix(df_e_poor, n=20):
     #columns = correlation.nlargest(n, 'poverty').index
     #st.write('OK')
     #st.write(columns)
-    st.write(data[columns].values)
+    #st.write(data[columns].values)
 
     correlation_map = np.corrcoef(data[columns].values.T)
     sns.set(font_scale=1, rc={'figure.figsize':(30,30)})
@@ -181,20 +176,18 @@ with st.echo():
     #e_countries # Emerging
     poor['emerging'] = poor['LOCATION'].isin(e_countries)
     e_poor = poor[poor['LOCATION'].isin(e_countries)]
-    st.write(poor)
-    st.write(e_poor)
+    #st.write(poor)
     st.write(thresholds(df_poor=poor))
-
-st.write(len(e_countries))
-st.write(len(poor.LOCATION.unique()))
-st.write(e_poor)
+    st.write(e_poor)
+    st.write(len(e_countries))
+    st.write(len(poor.LOCATION.unique()))
 
 st.markdown("## Building a Model")
 st.markdown("[Feature Selection Techniques in Machine Learning with Python] ('https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e')")
 with st.echo():
     st.write("Best ")
     st.write("f_classif")
-    st.write(e_poor_selectKBest(e_poor))
+    st.write(e_poor_selectKBest(e_poor,score_f=f_classif))
     st.write("chi2")
     st.write(e_poor_selectKBest(e_poor,score_f=chi2))
     st.write("mutual_info_classif")
