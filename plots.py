@@ -103,7 +103,7 @@ def scatter_poor_rich(base, x, x_name, y, y_name):
             y=y_name,
             facet_col="poverty",
             animation_frame='TIME', 
-            hover_name='LOCATION'
+            hover_name='LOCATION',
             size='Population',
             color='continent'
         )

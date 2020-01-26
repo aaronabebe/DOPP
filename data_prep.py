@@ -19,13 +19,6 @@ with st.echo():
         loop = raw.loc[raw.DEMO_IND == keys[i]]
         base = pd.merge(base, loop[['LOCATION', 'TIME', 'Value']],  how='left', left_on=['LOCATION','TIME'], right_on = ['LOCATION','TIME']) 
         base.columns = base.columns.str.replace('Value', keys[i])
-    
-    # ADD CONTINENTS FOR PLOTTING
-    continents = pd.read_csv('continents.csv', index_col=1)
-    base = pd.merge(base, continents, how='inner', left_on='LOCATION', right_index=True)
-    base = base[~base.index.duplicated()]
-    #base.drop(['key_0'], axis=1,inplace=True)
-
 
     # DROP DUPLICATES
     st.write(base.shape)
@@ -76,7 +69,7 @@ st.write('From 1970-2019, all countries considered, ', perc_poor_countries_ever,
 st.plotly_chart(plot.line_chart(base.copy(), y='target', y_name='LCU', threshold=1))
 
 
-st.plotly_chart(plot.combined_line_chart(base.copy()))
+st.plotly_chart(plot.combined_line_chart(base.copy(), 'target'))
 
 
 # DROP TARGET COLUMN AGAIN
@@ -128,8 +121,6 @@ with st.echo():
     na_total = []
     minimum = []
     maximum = []
-    # REMOVE CONTINENT COL
-    base.drop(['continent'], axis=1,inplace=True)
 
     for col in base.columns:
         na_percent.append(round(base[col].isna().sum() / base.shape[0] * 100, 2))
