@@ -85,22 +85,25 @@ def merge_continents(base):
     return base
 
 
-def scatter_poor_rich(base):
+def scatter_poor_rich(base, x, x_name, y, y_name):
     base.rename(columns={
-        '200151': 'Population aged 65 or older',
-        'SP_DYN_LE00_IN': 'Life expectancy at birth', 
+        x: x_name,
+        y: y_name, 
         '200101': 'Population'
     }, inplace=True)
+
+    # fill missing values with 1 to get shown on the scatter plot
     base['Population'].fillna(1, inplace=True)
     
     base = merge_continents(base)
 
     fig = px.scatter(
             base, 
-            x='LOCATION', 
-            y='Life expectancy at birth',
+            x=x_name, 
+            y=y_name,
             facet_col="poverty",
             animation_frame='TIME', 
+            hover_name='LOCATION'
             size='Population',
             color='continent'
         )
@@ -114,6 +117,7 @@ def scatter(base, x, x_name, y, y_name):
         '200101': 'Population'}, 
     inplace=True)
 
+    # fill missing values with 1 to get shown on the scatter plot
     base['Population'].fillna(1, inplace=True)
 
     base = merge_continents(base)

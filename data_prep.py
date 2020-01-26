@@ -117,7 +117,7 @@ st.markdown("## Final Data Set")
 st.write(base)
 st.write(base.shape)
 
-st.plotly_chart(plot.scatter_poor_rich(base.copy()))
+st.plotly_chart(plot.scatter_poor_rich(base.copy(), x='SP_DYN_TFRT_IN', x_name='Fertility Rate', y='NY_GDP_PCAP_CD', y_name='GDP per capita'))
 st.plotly_chart(plot.scatter(base.copy(), x='SP_DYN_TFRT_IN', x_name='Fertility Rate', y='NY_GDP_PCAP_CD', y_name='GDP per capita'))
 st.plotly_chart(plot.world_map(base.copy(), y='SP_DYN_TFRT_IN', y_name='Fertility Rate'))
 
