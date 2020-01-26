@@ -200,6 +200,33 @@ with st.echo():
     st.write(len(e_countries))
     st.write(len(poor.LOCATION.unique()))
 
+def years_emerged(e_poor):
+    years = {}
+    years_total = {}
+    e_countries = list()
+    df_e_poor = e_poor
+    for y in df_e_poor.TIME.unique():
+        df_y = df_e_poor[df_e_poor['TIME'] == y]
+        countries = list()
+        #countries_total = list()
+        for c in df_y.LOCATION.unique():
+            df_c = df_y[df_y['LOCATION'] == c]
+            if ((df_c.iloc[0,-2] == 0) & (c not in e_countries)):
+                #st.write(df_c.iloc[0,-2])
+                e_countries.append(c)
+                countries.append(c)
+            #break
+        #st.write(y,countries)
+        y = int(y)
+        years[y] = countries
+        years_total[y] = len(countries)
+    # PLOT
+    #sns.distplot(years, kde=False)
+    plt.bar(years_total.keys(), years_total.values(), color='g')
+    st.pyplot()
+
+    return(years)
+
 st.markdown("## Building a Model")
 st.markdown("[Feature Selection Techniques in Machine Learning with Python] ('https://towardsdatascience.com/feature-selection-techniques-in-machine-learning-with-python-f24e7da3f36e')")
 with st.echo():
@@ -214,6 +241,11 @@ with st.echo():
     e_poor_feature_importance(e_poor)
     st.write("Correlation Matrix")
     plot_correlation_matrix(e_poor)
+
+st.markdown("## Whether the countries emerged")
+with st.echo():
+    #years_emerged(e_poor)
+    st.write(years_emerged(e_poor))
     
 st.write(alles_good_papi())
 st.balloons()
