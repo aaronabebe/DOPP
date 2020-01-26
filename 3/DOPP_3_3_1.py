@@ -122,6 +122,24 @@ def e_poor_feature_importance(df_e_poor):
     model.fit(X,y)
     print(model.feature_importances_)
     feat_importances = pd.Series(model.feature_importances_, index=X.columns)
+    #st.write(feat_importances)
+
+    #columns = pd.DataFrame(feat_importances.index)
+    #st.write(columns)
+    scores = pd.DataFrame(feat_importances, dtype=float)
+    featureScores = scores.reset_index()
+    featureScores.columns = ['Features','Scores']
+    df_scores0 = featureScores.sort_values(by='Scores', ascending=False)
+    df_scores0.reset_index(drop=True, inplace=True)
+    #st.write(featureScores)
+    scores = df_scores0.Scores
+    rel_scores = np.array(scores)/np.abs(np.array(scores)).sum()
+    rel_scores.reshape(-1, 1)
+    #st.write(rel_scores.shape)
+    rel_scores = pd.DataFrame(rel_scores, dtype=float, columns=['Relative'])
+    df_scores = pd.concat([df_scores0,rel_scores], axis=1)
+    st.write(df_scores)
+    # Plot it in a barchart
     feat_importances.nlargest(20).plot(kind='barh', figsize = (13, 6), fontsize=12)
     st.pyplot()
     return("All fertig pa pitura")
