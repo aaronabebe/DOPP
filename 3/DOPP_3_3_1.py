@@ -58,29 +58,27 @@ def thresholds(df_poor):
     columns = poor.columns[2:-2]
     st.write(columns)
     X = poor.iloc[:,2:-2]
-    st.write(len(X))
+    #st.write(len(X))
     #st.write(columns)
     y = poor.iloc[:,-2:-1]
-    st.write(len(y))
+    #st.write(len(y))
     #st.write(y)
-    i = 1
     for c in columns:
-        st.write(c)
-        st.write(X[c])
-        X = np.array(X[c]).reshape(-1, 1)
-        y = y
+        #st.write(c)
+        #st.write(X[c])
+        X_ = np.array(X[c]).reshape(-1, 1)#X.iloc[:,c]
         clf_tree = DTC(criterion="gini",
                         max_depth=1, 
                         splitter="best")
-        clf_tree.fit(X,y)
+        clf_tree.fit(X_,y)
         #thresholds[c] = clf_tree.tree_.threshold[0]
         threshold = clf_tree.tree_.threshold[0]
-        st.write(threshold)
-        i = i+1
+        #st.write(X_.mean())
+        #st.write(threshold)
         #break        
-        #thresholds[c] = 
-    #st.write(thresholds)    
-    #return(thresholds)
+        thresholds[c] = threshold    
+    return(thresholds)
+
 
 def e_poor_selectKBest(df_e_poor, score_f = f_classif, k='all'):
     e_poor = df_e_poor
@@ -102,6 +100,21 @@ def e_poor_selectKBest(df_e_poor, score_f = f_classif, k='all'):
     featureScores = pd.concat([dfcolumns,dfscores],axis=1)
     featureScores.columns = ['Features','Scores']
     featureScores.sort_values(by='Scores', ascending=False, inplace=True)
+    scores = featureScores.Scores
+    rel_scores = np.array(scores)/np.abs(np.array(scores)).sum()
+    #rel_scores.reshape(-1, 1)
+    #st.write(rel_scores.shape)
+
+    #rel_scores.names = ['Relative']
+    #df = pd.DataFrame(rel_scores, columns=list('Relative'))
+    #st.write(df)
+    #featureScores = pd.concat([featureScores, df], axis=1)
+
+    #pd.concat([scores,rel_scores], axis=1)
+
+    #parameters = fit.
+    st.write(scores)
+    st.write(rel_scores)
     
     return(featureScores)
 
@@ -118,12 +131,6 @@ def e_poor_feature_importance(df_e_poor):
     st.pyplot()
     return("All fertig pa pitura")
 
-def e_poor_PCA(df_e_poor, n=20):
-
-
-
-
-    return (poor)
 
 def plot_correlation_matrix(df_e_poor, n=20):
     data = e_poor.iloc[:,2:-2] # All features
@@ -176,7 +183,7 @@ with st.echo():
     e_poor = poor[poor['LOCATION'].isin(e_countries)]
     st.write(poor)
     st.write(e_poor)
-    thresholds(df_poor=poor)
+    st.write(thresholds(df_poor=poor))
 
 st.write(len(e_countries))
 st.write(len(poor.LOCATION.unique()))
@@ -196,7 +203,6 @@ with st.echo():
     e_poor_feature_importance(e_poor)
     st.write("Correlation Matrix")
     plot_correlation_matrix(e_poor)
-    
     
 st.write(alles_good_papi())
 st.balloons()
